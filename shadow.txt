@@ -1,0 +1,5 @@
+plato:73cd7520e0d5ab04fb196ba97a499de3
+descartes:24a9f34b567e6b0e479d5551a2c95a0b
+kant:cdf6f5ce0e9100d8b2bd1e92a96ef190
+comte:8da78e6de6607737c53b00c03dd4e6ee
+sartre:9e5a2e7e6de5f64ef89a53734faa0e04
