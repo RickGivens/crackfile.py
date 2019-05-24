@@ -1,8 +1,7 @@
 # !/usr/bin/python
 # Richard Givens
-# CPSC 62800
-# onecore.py program
-# Code modified from the original text
+# 05/24/2019
+# Code modified from Python Forensics by Chet Hosmer, Chapter 10, pages 280 - 283
 
 import hashlib
 import time
@@ -11,6 +10,7 @@ import os
 import itertools
 
 
+# Modify these values as necessary to create larger, and more complex tables
 
 lowerCase   = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h']
 upperCase   = ['G','H','I', 'J','K','L']
@@ -19,13 +19,10 @@ special     = ['!','@','#','$']
 
 allCharacters = []
 allCharacters = lowerCase + upperCase + numbers + special
-
-# Commented out, unnecessary
-#DIR = 'C:\Users\Rick\Desktop\VMShare\Week_7'
-
+# Hard coded salt utilized in the PW-all file provied, change as necessary
 SALT = "&45Bvx9"
 
-
+# Modify these values to suit your use case
 PW_LOW  = 2
 
 # Value of 6 generates passwords of no greater than 5 digits
@@ -82,70 +79,65 @@ print 'Elapsed Time: ', elapsedTime
 print 'Hashes Generated: ', pwCount
 print
 
-# Function below tests the hashfile against sample values, and also will serve
-# a template for the crackfile functionality. The function is called at the
-# very bottom
-#
-# Killing two birds with one stone, if the sample works then I can co-opt the
-# design into the crackfile.py program, coding should be the same.
+# This is the original function for the crackfile.py program.
 if __name__ == "__main__":
-# Tried playing around with importing the script below into another module,
-# couldn't get it right, and removing the if name == statement could cause
-# me to lose track of my indentations, so leaving it
 
+# Reads sys args and sets the variables if present, if sys args are not entered
+# the application will rely on hardcoded values for the variables
     if len(sys.argv) == 1:
+# the rainbowTable file represents a pregenerated file in which the hash value
+# is listed first, and the password second
+# Example: 1f5b6d6065ab46634ba71e8f656f4f3d He#a0
+
         rainbowTable = 'PW-all.txt'
+# the hashFile represents an exfiltrated user database file
+# in which the username is listed first, and the hashed password second
+# Example: plato:73cd7520e0d5ab04fb196ba97a499de3
         hashFile = 'shadow.txt'
+
     elif len(sys.argv)>=2:
         rainbowTable = sys.argv[1]
         hashFile = sys.argv[2]
+
     def foundYou():
         sampleTime = time.time()
 
-# Open the file as read only
         try:
             fp = open (rainbowTable,'r')
-
             db = open(hashFile,'r')
             dbDict = {}
             usrDict = {}
             pwDict = {}
 
             for line in fp:
-# Code modification, split the line on a space, remove any special characters
-# Maybe unnecessary, but the shadow.txt file had newline characters,
-# Duplicating here just to be safe
+# The rainbowTable file is split and stripped on all newline and non-printable
+# characters, the contents are then read into a dictionary
                 pairs = line.strip().split(" ")
                 pwDict.update({pairs[0]:pairs[1]})
 
-
             for line in db:
-# Removing the newline characters and creating a split
+# Same split and strip operations as rainbowTable, contents then read into a
+# dictionary
                 dbpairs = line.strip().split(':')
                 dbDict.update(({dbpairs[0]:dbpairs[1]}))
-# Reversing the key/value pairs to make the list easier to search, one thing I
-# tried when having problems, and just never removed it
-# When I got to something that worked, I stopped
+# The key value pairs in dbDict are swapped, creating the usrDict in which the
+# hashed password is the key and the user is the value.
+# This allows the two dictonaries to be compared key for key
                 usrDict = dict([(value, key) for key, value in dbDict.items()])
 
+# Setting the counter for benchmarking purposes
             count = 0
-# Probably a better way of doing this, but this is the first solution I
-# came up with that worked
-            for k, v in usrDict.iteritems():
-
-                    searchValue = k
-                    searchUser = v
-
-                    for k, v in pwDict.iteritems():
-                        targetValue = k
-                        targetPW = v
-
-                        if searchValue == targetValue:
-                            count += 1
-# After four hours of trying to get this to work, you really would not have
-# liked what I had for a print statement before...
-                            print str(searchUser) + '  '+ str(targetPW)
-                            timeElapsed = time.time() - sampleTime
+# The function searches pwDict for the key in usrDict, and if found returns the
+# values for both dictionaries.
+# Idea for code improvement is to create a new file and append the results
+            for k,v in usrDict.iteritems():
+                searchValue = k
+                searchUser = v
+                if pwDict.has_key(k):
+                    targetPW = pwDict.get(k)
+                    count += 1
+                    print searchUser + '  '+ str(targetPW)
+                    timeElapsed = time.time() - sampleTime
 
         except:
             print 'File Processing Error'
